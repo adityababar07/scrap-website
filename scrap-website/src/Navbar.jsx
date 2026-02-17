@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import user from "./assets/user.svg";
 
 export default function Navbar() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const location = useLocation();
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -21,11 +22,11 @@ export default function Navbar() {
 
   return (
     <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50">
-      <div className="flex-1">
+      <div className="flex-1 flex items-center">
         <Link to="/" className="btn btn-ghost text-xl">ScrapX</Link>
         <div className="hidden lg:flex px-4 gap-2">
-          <Link to="/buy" className="btn btn-ghost btn-sm">Buy</Link>
-          <Link to="/sell" className="btn btn-ghost btn-sm">Sell</Link>
+          <Link to="/buy" className={`btn btn-sm ${location.pathname === '/buy' ? 'btn-active' : 'btn-ghost'}`}>Buy</Link>
+          <Link to="/sell" className={`btn btn-sm ${location.pathname === '/sell' ? 'btn-active' : 'btn-ghost'}`}>Sell</Link>
         </div>
       </div>
       <div className="flex-none gap-2">

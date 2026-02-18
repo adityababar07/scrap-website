@@ -21,7 +21,7 @@ function App() {
 
   return (
     <CartProvider>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route element={<MainLayout />}>
             <Route path="/" element={<AuthRedirect><Home /></AuthRedirect>} />

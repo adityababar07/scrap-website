@@ -1,21 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useCart } from "./CartContext";
 
-const products = [
-    { id: 1, name: "Mixed Aluminium", price: 45, originalPrice: 55, image: "https://placehold.co/300x400/png?text=Aluminium" },
-    { id: 2, name: "Copper Wire", price: 75, originalPrice: null, image: "https://placehold.co/300x400/png?text=Copper" },
-    { id: 3, name: "Steel Pipes", price: 20, originalPrice: 25, image: "https://placehold.co/300x400/png?text=Steel" },
-    { id: 4, name: "E-Waste (PCBs)", price: 90, originalPrice: 120, image: "https://placehold.co/300x400/png?text=E-Waste" },
-    { id: 5, name: "Brass Fittings", price: 60, originalPrice: null, image: "https://placehold.co/300x400/png?text=Brass" },
-];
-
-const categories = [
-    { id: 1, name: "Metals", image: "https://placehold.co/300x300/png?text=Metals" },
-    { id: 2, name: "Electronics", image: "https://placehold.co/300x300/png?text=Electronics" },
-    { id: 3, name: "Plastic", image: "https://placehold.co/300x300/png?text=Plastic" },
-    { id: 4, name: "Paper", image: "https://placehold.co/300x300/png?text=Paper" },
-];
+import { products, categories } from "./data";
 
 function Buy() {
+    const { addToCart } = useCart();
     return (
         <div className="min-h-screen bg-base-200 p-6 md:p-10">
             {/* Trending Now Section */}
@@ -37,12 +27,18 @@ function Buy() {
                                     <div className="absolute top-2 left-2 badge badge-secondary z-10">Sale</div>
                                 )}
                                 <figure className="h-64 overflow-hidden">
-                                    <img src={product.image} alt={product.name} className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110" />
+                                    <Link to={`/product/${product.id}`}>
+                                        <img src={product.image} alt={product.name} className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110" />
+                                    </Link>
                                 </figure>
                                 {/* Floating Info Bar */}
                                 <div className="absolute bottom-4 left-4 right-4 bg-base-100/90 backdrop-blur-sm p-3 rounded-xl shadow-lg flex justify-between items-center">
                                     <div>
-                                        <h3 className="font-semibold text-sm text-base-content">{product.name}</h3>
+                                        <h3 className="font-semibold text-sm text-base-content">
+                                            <Link to={`/product/${product.id}`} className="hover:underline">
+                                                {product.name}
+                                            </Link>
+                                        </h3>
                                         <div className="text-xs">
                                             <span className="font-bold text-base-content">${product.price}</span>
                                             {product.originalPrice && (
@@ -50,8 +46,12 @@ function Buy() {
                                             )}
                                         </div>
                                     </div>
-                                    <button className="btn btn-circle btn-xs btn-neutral">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>
+                                    <button
+                                        className="btn btn-circle btn-xs btn-neutral hover:btn-primary"
+                                        onClick={() => addToCart({ ...product, quantity: 1 })}
+                                        aria-label="Add to cart"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                                     </button>
                                 </div>
                             </div>

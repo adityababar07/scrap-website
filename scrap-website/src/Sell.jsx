@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     BarChart,
     Bar,
@@ -9,6 +9,8 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
+import api from "./api";
+import { useNavigate } from "react-router-dom";
 
 const dataWeekly = [
     { name: "Mon", profit: 400, sold: 24, pending: 10 },
@@ -44,6 +46,8 @@ const dataYearly = [
 
 export default function Sell() {
     const [graphView, setGraphView] = useState("weekly");
+    const [categories, setCategories] = useState([]);
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         image: null,
         category: "",
@@ -52,17 +56,48 @@ export default function Sell() {
         description: "",
         location: "",
         contactNumber: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
+        name: "", // Product Name
     });
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.get('categories/');
+                setCategories(response.data);
+            } catch (error) {
+                console.error("Failed to fetch categories:", error);
+            }
+        };
+        fetchCategories();
+    }, []);
+
+    const [stats, setStats] = useState({
+        profit: 0,
+        items_sold: 0,
+        items_pending: 0,
+        items_rejected: 0,
+        items_delivered: 0
+    });
+    const [graphData, setGraphData] = useState([]);
+
+    useEffect(() => {
+        const fetchDashboard = async () => {
+            try {
+                const response = await api.get('seller-dashboard/');
+                setStats(response.data.stats);
+                setGraphData(response.data.graph);
+            } catch (error) {
+                console.error("Failed to fetch dashboard:", error);
+            }
+        };
+        fetchDashboard();
+    }, []);
 
     const getGraphData = () => {
-        switch (graphView) {
-            case "monthly": return dataMonthly;
-            case "yearly": return dataYearly;
-            default: return dataWeekly;
-        }
+        // For now, returning the one graph data set from backend for all views or just passing it directly.
+        // Backend currently only sends one 'graph' list (weekly-ish).
+        return graphData.length > 0 ? graphData : dataWeekly;
     }
 
     const handleInputChange = (e) => {
@@ -74,24 +109,51 @@ export default function Sell() {
         setFormData((prev) => ({ ...prev, image: e.target.files[0] }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Form Submitted", formData);
-        alert("Item listed successfully! (Simulated)");
+        setLoading(true);
+
+        const data = new FormData();
+        data.append('name', formData.name);
+        data.append('category_id', formData.category); // Sending category_id
+        data.append('price', formData.price);
+        data.append('quantity', formData.quantity);
+        data.append('description', formData.description);
+        data.append('city', formData.location); // Mapping location to city
+        data.append('phone', formData.contactNumber);
+        if (formData.image) {
+            data.append('image', formData.image);
+        }
+
+        try {
+            await api.post('products/', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            alert("Item listed successfully!");
+            navigate('/buy');
+        } catch (error) {
+            console.error("Failed to list item:", error);
+            alert("Failed to list item. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="min-h-screen bg-base-200 p-4 md:p-8">
             <h1 className="text-4xl font-bold text-base-content text-center mb-8">Seller Dashboard</h1>
 
+            {/* Stats Cards - Static for now */}
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
                 {[
-                    { title: "Profit Earned", value: "$4,200", color: "bg-success text-success-content" },
-                    { title: "Items Sold", value: "145", color: "bg-info text-info-content" },
-                    { title: "Items Pending", value: "12", color: "bg-warning text-warning-content" },
-                    { title: "Items Rejected", value: "5", color: "bg-error text-error-content" },
-                    { title: "Items Delivered", value: "128", color: "bg-primary text-primary-content" },
+                    { title: "Profit Earned", value: `₹${stats.profit}`, color: "bg-success text-success-content" },
+                    { title: "Items Sold", value: stats.items_sold, color: "bg-info text-info-content" },
+                    { title: "Items Pending", value: stats.items_pending, color: "bg-warning text-warning-content" },
+                    { title: "Items Rejected", value: stats.items_rejected, color: "bg-error text-error-content" },
+                    { title: "Items Delivered", value: stats.items_delivered, color: "bg-primary text-primary-content" },
                 ].map((stat, index) => (
                     <div key={index} className={`card ${stat.color} shadow-xl`}>
                         <div className="card-body p-4 text-center">
@@ -142,6 +204,14 @@ export default function Sell() {
                     <h2 className="card-title text-2xl mb-6 justify-center">List New Scrap Item</h2>
                     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+                        {/* Product Name */}
+                        <div className="form-control md:col-span-2">
+                            <label className="label">
+                                <span className="label-text">Product Name</span>
+                            </label>
+                            <input type="text" name="name" placeholder="Enter product name" className="input input-bordered" value={formData.name} onChange={handleInputChange} required />
+                        </div>
+
                         {/* Image Upload */}
                         <div className="form-control md:col-span-2">
                             <label className="label">
@@ -157,19 +227,16 @@ export default function Sell() {
                             </label>
                             <select name="category" className="select select-bordered" value={formData.category} onChange={handleInputChange} required>
                                 <option value="" disabled>Pick a category</option>
-                                <option value="Metals">Metals</option>
-                                <option value="Electronics">Electronics</option>
-                                <option value="Plastic">Plastic</option>
-                                <option value="Paper">Paper</option>
-                                <option value="Glass">Glass</option>
-                                <option value="Other">Other</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.category_name}</option>
+                                ))}
                             </select>
                         </div>
 
                         {/* Price */}
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text">Expected Price ($)</span>
+                                <span className="label-text">Expected Price (₹)</span>
                             </label>
                             <input type="number" name="price" placeholder="Enter price" className="input input-bordered" value={formData.price} onChange={handleInputChange} required />
                         </div>
@@ -185,9 +252,9 @@ export default function Sell() {
                         {/* Location */}
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text">Location</span>
+                                <span className="label-text">Location (City)</span>
                             </label>
-                            <input type="text" name="location" placeholder="Enter pickup location" className="input input-bordered" value={formData.location} onChange={handleInputChange} required />
+                            <input type="text" name="location" placeholder="Enter city" className="input input-bordered" value={formData.location} onChange={handleInputChange} required />
                         </div>
 
                         {/* Contact Number */}
@@ -198,14 +265,6 @@ export default function Sell() {
                             <input type="tel" name="contactNumber" placeholder="Enter phone number" className="input input-bordered" value={formData.contactNumber} onChange={handleInputChange} required />
                         </div>
 
-                        {/* Email */}
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text">Email</span>
-                            </label>
-                            <input type="email" name="email" placeholder="Enter email" className="input input-bordered" value={formData.email} onChange={handleInputChange} required />
-                        </div>
-
                         {/* Description */}
                         <div className="form-control md:col-span-2">
                             <label className="label">
@@ -214,25 +273,11 @@ export default function Sell() {
                             <textarea name="description" className="textarea textarea-bordered h-24" placeholder="Describe the condition and type of scrap..." value={formData.description} onChange={handleInputChange}></textarea>
                         </div>
 
-                        {/* Password */}
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text">Password</span>
-                            </label>
-                            <input type="password" name="password" placeholder="Enter password" className="input input-bordered" value={formData.password} onChange={handleInputChange} required />
-                        </div>
-
-                        {/* Confirm Password */}
-                        <div className="form-control">
-                            <label className="label">
-                                <span className="label-text">Confirm Password</span>
-                            </label>
-                            <input type="password" name="confirmPassword" placeholder="Confirm password" className="input input-bordered" value={formData.confirmPassword} onChange={handleInputChange} required />
-                        </div>
-
                         {/* Submit Button */}
                         <div className="form-control md:col-span-2 mt-6">
-                            <button type="submit" className="btn btn-primary w-full">Submit Listing</button>
+                            <button type="submit" className={`btn btn-primary w-full ${loading ? 'loading' : ''}`} disabled={loading}>
+                                {loading ? 'Listing...' : 'Submit Listing'}
+                            </button>
                         </div>
 
                     </form>

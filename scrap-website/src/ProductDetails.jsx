@@ -2,16 +2,25 @@ import { useState } from "react";
 
 import { useParams, Link } from "react-router-dom";
 import { useCart } from "./CartContext";
-import { products } from "./data";
+import { useProducts } from "./ProductContext";
 import user from "./assets/user.svg"; // Assuming user icon exists, or use a placeholder
 
 export default function ProductDetails() {
     const { id } = useParams();
     const { addToCart } = useCart();
+    const { products, loading } = useProducts();
     const [quantity, setQuantity] = useState(1);
 
     // Convert id to number for comparison
     const product = products.find(p => p.id === parseInt(id));
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-base-200 flex items-center justify-center">
+                <span className="loading loading-spinner loading-lg"></span>
+            </div>
+        );
+    }
 
     if (!product) {
         return (

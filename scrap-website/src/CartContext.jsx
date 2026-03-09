@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useEffect } from 'react';
+import api from './api';
 
 const CartContext = createContext();
 
@@ -6,52 +7,81 @@ export const useCart = () => useContext(CartContext);
 
 export const CartProvider = ({ children }) => {
     // Initialize with some mock data for demonstration
-    const [cartItems, setCartItems] = useState([
-        {
-            id: 1,
-            name: "Copper Wire Scrap",
-            price: 15.5,
-            quantity: 10,
-            image: "https://images.unsplash.com/photo-1549419137-975924d5507b?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-        },
-        {
-            id: 2,
-            name: "Aluminum Cans",
-            price: 2.2,
-            quantity: 50,
-            image: "https://images.unsplash.com/photo-1596483569476-c5e3f4337d1d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-        },
-        {
-            id: 3,
-            name: "Old Electronics",
-            price: 45.0,
-            quantity: 2,
-            image: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60",
-        },
-    ]);
+    const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const addToCart = (item) => {
-        setCartItems((prevItems) => {
-            const existingItem = prevItems.find((i) => i.id === item.id);
-            if (existingItem) {
-                return prevItems.map((i) =>
-                    i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
-                );
+    const fetchCart = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setCartItems([]);
+            return;
+        }
+        try {
+            const response = await api.get('orders/cart/');
+            // The endpoint returns the order object, which has 'items' array.
+            // Items invoke OrderItemSerializer, which has 'product' (ProductSerializer).
+            // We need to map this to the structure our components expect if different, 
+            // or update components to match this structure.
+            // Let's assume we map it to be safe and consistent with previous mock data structure where possible.
+            if (response.data && response.data.items) {
+                const mappedItems = response.data.items.map(item => ({
+                    id: item.id, // OrderItem ID
+                    productId: item.product.id,
+                    name: item.product.name,
+                    price: item.product.price,
+                    quantity: item.quantity,
+                    image: item.product.image 
+                        ? (item.product.image.startsWith('http') ? item.product.image : `http://127.0.0.1:8000${item.product.image}`) 
+                        : null,
+                    stock: item.product.quantity // Available stock
+                }));
+                setCartItems(mappedItems);
+            } else {
+                setCartItems([]);
             }
-            return [...prevItems, item];
-        });
+
+        } catch (error) {
+            console.error("Failed to fetch cart:", error);
+        }
     };
 
-    const removeFromCart = (id) => {
-        setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    useEffect(() => {
+        fetchCart();
+    }, []);
+
+    const addToCart = async (product) => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert("Please login to add items to cart.");
+            return;
+        }
+        try {
+            await api.post('orders/add-to-cart/', {
+                product_id: product.id,
+                quantity: product.quantity || 1
+            });
+            alert("Added to cart!");
+            fetchCart(); // Refresh cart
+        } catch (error) {
+            console.error("Failed to add to cart:", error);
+            alert("Failed to add to cart.");
+        }
     };
 
-    const updateQuantity = (id, quantity) => {
-        setCartItems((prevItems) =>
-            prevItems.map((item) =>
-                item.id === id ? { ...item, quantity: Math.max(0, quantity) } : item
-            )
-        );
+    const removeFromCart = async (id) => {
+        try {
+            await api.delete(`order-items/${id}/`);
+            fetchCart();
+        } catch (error) {
+            console.error("Failed to remove item:", error);
+        }
+    };
+
+    const updateQuantity = async (id, quantity) => {
+        // We'd need an endpoint to update OrderItem quantity directly.
+        // For now, simpler to just re-add or maybe implement update logic.
+        // Let's skip complex update for this iteration and focus on add/remove.
+        console.log("Update quantity not fully implemented via API yet");
     };
 
     const clearCart = () => {
@@ -63,12 +93,6 @@ export const CartProvider = ({ children }) => {
     };
 
     const getCartCount = () => {
-        // Returns number of unique items, or total quantity if preferred. 
-        // Usually navbar badges show unique items count or total quantity. 
-        // Let's go with unique items for now, or total quantity? 
-        // Features.md doesn't specify, but typical e-commerce is unique items. 
-        // Wait, typically it's total *items* in cart (sum of quantities) or unique products.
-        // Let's use unique products count for the badge as it's cleaner.
         return cartItems.length;
     };
 
@@ -82,6 +106,7 @@ export const CartProvider = ({ children }) => {
                 clearCart,
                 getCartTotal,
                 getCartCount,
+                fetchCart
             }}
         >
             {children}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import axios from "axios";
 
 const Signup = () => {
     const [name, setName] = useState("");
@@ -7,16 +8,27 @@ const Signup = () => {
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
 
-    const handleSignup = (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
-        // Dummy registration
-        if (name && email && password) {
-            // In a real app, you'd send this to a backend
-            console.log("Registered:", { name, email, password });
+        try {
+            // Register user
+            await axios.post('http://127.0.0.1:8000/auth/users/', {
+                username: name, // Djoser uses username by default, mapping name to username
+                email,
+                password
+            });
 
-            // For now, let's just log them in directly or redirect to login
-            localStorage.setItem("token", "dummy-token");
-            navigate("/buy");
+            alert("Registration successful! Please login.");
+            navigate("/login");
+
+        } catch (error) {
+            console.error("Signup failed:", error);
+            // Djoser returns field errors, ideally we display them
+            if (error.response && error.response.data) {
+                alert(`Signup failed: ${JSON.stringify(error.response.data)}`);
+            } else {
+                alert("Signup failed! Try again.");
+            }
         }
     };
 

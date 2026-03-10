@@ -87,28 +87,48 @@ function Buy() {
                                         <img src={product.image} alt={product.name} className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110" />
                                     </Link>
                                 </figure>
-                                {/* Floating Info Bar */}
-                                <div className="absolute bottom-4 left-4 right-4 bg-base-100/90 backdrop-blur-sm p-3 rounded-xl shadow-lg flex justify-between items-center">
-                                    <div>
-                                        <h3 className="font-semibold text-sm text-base-content">
-                                            <Link to={`/product/${product.id}`} className="hover:underline">
-                                                {product.name}
-                                            </Link>
-                                        </h3>
-                                        <div className="text-xs">
-                                            <span className="font-bold text-base-content">${product.price}</span>
-                                            {product.originalPrice && (
-                                                <span className="text-base-content/50 line-through ml-2">${product.originalPrice}</span>
-                                            )}
+                                <div className="absolute bottom-4 left-4 right-4 bg-base-100/95 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-base-content/5">
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex justify-between items-start">
+                                            <h3 className="font-bold text-sm text-base-content line-clamp-1 flex-1 mr-2">
+                                                <Link to={`/product/${product.id}`} className="hover:text-primary transition-colors">
+                                                    {product.name}
+                                                </Link>
+                                            </h3>
+                                            <span className="text-primary font-bold text-sm whitespace-nowrap">₹{product.price}/kg</span>
                                         </div>
+                                        
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center bg-base-200 rounded-lg px-2 py-0.5">
+                                                <input 
+                                                    type="number" 
+                                                    defaultValue="1.0" 
+                                                    min="0.1" 
+                                                    max={product.weight} 
+                                                    step="0.1"
+                                                    className="bg-transparent border-none outline-none text-xs w-12 font-semibold text-center"
+                                                    id={`qty-${product.id}`}
+                                                />
+                                                <span className="text-[10px] opacity-60 font-bold uppercase">kg</span>
+                                            </div>
+                                            
+                                            <button 
+                                                className="btn btn-primary btn-xs flex-1 text-[10px] gap-1 px-1 h-7 min-h-7"
+                                                onClick={() => {
+                                                    const qty = parseFloat(document.getElementById(`qty-${product.id}`).value);
+                                                    addToCart({ ...product, quantity: qty });
+                                                }}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                                ADD
+                                            </button>
+                                        </div>
+                                        {product.weight > 0 && (
+                                            <div className="text-[9px] opacity-40 text-center font-medium">
+                                                Available: {product.weight} kg
+                                            </div>
+                                        )}
                                     </div>
-                                    <button
-                                        className="btn btn-circle btn-xs btn-neutral hover:btn-primary"
-                                        onClick={() => addToCart({ ...product, quantity: 1 })}
-                                        aria-label="Add to cart"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                                    </button>
                                 </div>
                             </div>
                         </div>

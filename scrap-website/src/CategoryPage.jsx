@@ -101,25 +101,42 @@ function CategoryPage() {
                                     {product.name}
                                 </h2>
 
-                                <p className="text-xs text-base-content/70">
-                                    Condition: {product.condition || 'Used'} <br/>
-                                    Listed: {product.created_at ? new Date(product.created_at).toLocaleDateString() : 'Recently'}
-                                </p>
-
-                                <div className="card-actions justify-between items-center mt-4">
-                                    <div className="flex flex-col">
-                                        <span className="text-lg font-bold text-primary">₹{product.price}</span>
-                                        {product.originalPrice && (
-                                            <span className="text-xs text-base-content/50 line-through">₹{product.originalPrice}</span>
-                                        )}
+                                <div className="flex flex-col gap-2 mt-2">
+                                    <div className="flex justify-between items-center text-xs opacity-70">
+                                        <span>Condition: {product.condition || 'Used'}</span>
+                                        <span>Available: {product.quantity} kg</span>
                                     </div>
-                                    <button 
-                                        className="btn btn-circle btn-sm btn-neutral hover:btn-primary"
-                                        onClick={() => addToCart({ ...product, quantity: 1 })}
-                                        aria-label="Add to cart"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                                    </button>
+                                    
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <div className="flex flex-col">
+                                            <span className="text-lg font-bold text-primary">₹{product.price}</span>
+                                            <span className="text-[10px] opacity-50 uppercase font-bold">per kg</span>
+                                        </div>
+                                        
+                                        <div className="flex items-center bg-base-200 rounded-lg px-2 py-1 ml-auto">
+                                            <input 
+                                                type="number" 
+                                                defaultValue="1.0" 
+                                                min="0.1" 
+                                                max={product.quantity} 
+                                                step="0.1"
+                                                className="bg-transparent border-none outline-none text-sm w-12 font-bold text-center"
+                                                id={`cat-qty-${product.id}`}
+                                            />
+                                            <span className="text-xs opacity-60 font-bold">kg</span>
+                                        </div>
+                                        
+                                        <button 
+                                            className="btn btn-primary btn-sm btn-circle"
+                                            onClick={() => {
+                                                const qty = parseFloat(document.getElementById(`cat-qty-${product.id}`).value);
+                                                addToCart({ ...product, quantity: qty });
+                                            }}
+                                            aria-label="Add to cart"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "./CartContext";
 
 export default function Cart() {
     const { cartItems, removeFromCart, getCartTotal } = useCart();
     const [shipping, setShipping] = useState(20.0);
+    const navigate = useNavigate();
 
     const subtotal = getCartTotal();
     const total = subtotal + (cartItems.length > 0 ? shipping : 0);
 
     const handleCheckout = () => {
-        alert("Proceeding to checkout... (Simulated)");
+        navigate('/checkout');
     };
 
     return (
@@ -36,7 +37,7 @@ export default function Cart() {
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h2 className="card-title text-lg md:text-xl">{item.name}</h2>
-                                                <p className="text-sm opacity-70">Quantity: {item.quantity}</p>
+                                                <p className="text-sm opacity-70">Weight: {item.quantity} kg</p>
                                             </div>
                                             <button
                                                 className="btn btn-square btn-sm btn-ghost text-error"
@@ -47,7 +48,7 @@ export default function Cart() {
                                             </button>
                                         </div>
                                         <div className="card-actions justify-end items-center mt-auto">
-                                            <span className="text-lg font-bold">${(item.price * item.quantity).toFixed(2)}</span>
+                                            <span className="text-lg font-bold">₹{(item.price * item.quantity).toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -64,19 +65,19 @@ export default function Cart() {
 
                             <div className="flex justify-between mb-2">
                                 <span className="opacity-70">Subtotal</span>
-                                <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                                <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
                             </div>
 
                             <div className="flex justify-between mb-4">
                                 <span className="opacity-70">Shipping</span>
-                                <span className="font-semibold">${(cartItems.length > 0 ? shipping : 0).toFixed(2)}</span>
+                                <span className="font-semibold">₹{(cartItems.length > 0 ? shipping : 0).toFixed(2)}</span>
                             </div>
 
                             <div className="divider my-0"></div>
 
                             <div className="flex justify-between mt-4 mb-8">
                                 <span className="text-lg font-bold">Total</span>
-                                <span className="text-lg font-bold text-primary">${total.toFixed(2)}</span>
+                                <span className="text-lg font-bold text-primary">₹{total.toFixed(2)}</span>
                             </div>
 
                             <button

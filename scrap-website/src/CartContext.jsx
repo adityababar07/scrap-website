@@ -58,13 +58,14 @@ export const CartProvider = ({ children }) => {
         try {
             await api.post('orders/add-to-cart/', {
                 product_id: product.id,
-                quantity: product.quantity || 1
+                quantity: parseFloat(product.quantity || 1.0)
             });
             alert("Added to cart!");
             fetchCart(); // Refresh cart
         } catch (error) {
             console.error("Failed to add to cart:", error);
-            alert("Failed to add to cart.");
+            const errorMsg = error.response?.data?.error || "Failed to add to cart.";
+            alert(errorMsg);
         }
     };
 

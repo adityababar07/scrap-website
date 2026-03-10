@@ -13,6 +13,7 @@ import AuthRedirect from './AuthRedirect'
 import Profile from './Profile'
 
 import CategoryPage from './CategoryPage'
+import Checkout from './Checkout'
 
 import Cart from './Cart'
 import ProductDetails from './ProductDetails'
@@ -42,6 +43,7 @@ function App() {
               <Route path="/sell" element={<ProtectedRoute><Sell /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+              <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="*" element={<NotFound />} />

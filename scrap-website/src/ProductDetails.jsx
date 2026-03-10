@@ -9,7 +9,7 @@ export default function ProductDetails() {
     const { id } = useParams();
     const { addToCart } = useCart();
     const { products, loading } = useProducts();
-    const [quantity, setQuantity] = useState(1);
+    const [quantity, setQuantity] = useState(1.0);
 
     // Convert id to number for comparison
     const product = products.find(p => p.id === parseInt(id));
@@ -32,11 +32,11 @@ export default function ProductDetails() {
     }
 
     const availableStock = product.weight;
-    const isOutOfStock = quantity > availableStock;
-    const totalPrice = product.price * quantity;
+    const isOutOfStock = parseFloat(quantity) > availableStock;
+    const totalPrice = (product.price * parseFloat(quantity)).toFixed(2);
 
     // Max slider value - allow going a bit over to demonstrate validation
-    const maxSliderValue = Math.max(availableStock + 5, 20);
+    const maxSliderValue = Math.max(availableStock + 1, 10);
 
     return (
         <div className="min-h-screen bg-base-200 p-4 md:p-10 flex justify-center">
@@ -74,14 +74,15 @@ export default function ProductDetails() {
                                 </label>
                                 <input
                                     type="range"
-                                    min="1"
+                                    min="0.1"
                                     max={maxSliderValue}
+                                    step="0.1"
                                     value={quantity}
-                                    onChange={(e) => setQuantity(parseInt(e.target.value))}
+                                    onChange={(e) => setQuantity(parseFloat(e.target.value))}
                                     className={`range ${isOutOfStock ? 'range-error' : 'range-primary'}`}
                                 />
                                 <div className="w-full flex justify-between text-xs px-2 mt-2">
-                                    <span>1 {product.unit}</span>
+                                    <span>0.1 {product.unit}</span>
                                     <span>{maxSliderValue} {product.unit}</span>
                                 </div>
                                 <div className="text-center font-bold text-lg mt-2">
@@ -90,7 +91,7 @@ export default function ProductDetails() {
                                 {isOutOfStock && (
                                     <div role="alert" className="alert alert-error mt-2 py-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        <span>Out of stock! Decrease the quantity.</span>
+                                        <span>Out of stock! Only {availableStock} {product.unit} available.</span>
                                     </div>
                                 )}
                             </div>

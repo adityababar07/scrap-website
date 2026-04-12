@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useCart } from "./CartContext";
 import { useProducts } from "./ProductContext";
@@ -8,6 +8,25 @@ function Buy() {
     const { addToCart } = useCart();
     const { products, loading } = useProducts(); 
     const [categories, setCategories] = useState([]);
+    const [personalRecs, setPersonalRecs] = useState([]);
+    const [recsLoading, setRecsLoading] = useState(false);
+    const [hasHistory, setHasHistory] = useState(false);
+    const [recQtys, setRecQtys] = useState({});
+    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+    const carouselRef = useRef(null);
+    const recsCarouselRef = useRef(null);
+
+    const scrollCarousel = (direction) => {
+        if (carouselRef.current) {
+            carouselRef.current.scrollBy({ left: direction * 280, behavior: "smooth" });
+        }
+    };
+
+    const scrollRecsCarousel = (direction) => {
+        if (recsCarouselRef.current) {
+            recsCarouselRef.current.scrollBy({ left: direction * 280, behavior: "smooth" });
+        }
+    };
 
     useEffect(() => {
         const fetchCategories = async () => {
@@ -54,6 +73,21 @@ function Buy() {
         fetchCategories();
     }, []);
 
+    // Fetch personalized recommendations for logged-in users
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) { setIsLoggedIn(false); return; }
+        setIsLoggedIn(true);
+        setRecsLoading(true);
+        api.get('personalized-recommendations/')
+            .then(res => {
+                setPersonalRecs(res.data.recommendations || []);
+                setHasHistory(res.data.has_history);
+            })
+            .catch(() => setPersonalRecs([]))
+            .finally(() => setRecsLoading(false));
+    }, []);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-base-200 flex items-center justify-center">
@@ -69,12 +103,12 @@ function Buy() {
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-base-content">Trending Now</h2>
                     <div className="flex gap-2">
-                        <button className="btn btn-circle btn-sm btn-ghost">❮</button>
-                        <button className="btn btn-circle btn-sm btn-ghost">❯</button>
+                        <button className="btn btn-circle btn-sm btn-ghost" onClick={() => scrollCarousel(-1)}>❮</button>
+                        <button className="btn btn-circle btn-sm btn-ghost" onClick={() => scrollCarousel(1)}>❯</button>
                     </div>
                 </div>
 
-                <div className="carousel carousel-center w-full p-4 space-x-4 bg-transparent rounded-box">
+                <div ref={carouselRef} className="carousel carousel-center w-full p-4 space-x-4 bg-transparent rounded-box" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
                     {products.map((product) => (
                         <div key={product.id} className="carousel-item">
                             <div className="card w-64 bg-base-100 shadow-xl relative group">
@@ -135,6 +169,113 @@ function Buy() {
                     ))}
                 </div>
             </section>
+
+            {/* ─── You Might Like ─── */}
+            {isLoggedIn ? (
+                (recsLoading || personalRecs.length > 0) && (
+                    <section className="mb-12">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1 h-7 rounded-full bg-secondary"></div>
+                                <div>
+                                    <h2 className="text-2xl font-bold text-base-content">You Might Like</h2>
+                                    {hasHistory && (
+                                        <p className="text-xs text-base-content/50 mt-0.5">Based on your cart & purchase history</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <button className="btn btn-circle btn-sm btn-ghost" onClick={() => scrollRecsCarousel(-1)}>❮</button>
+                                <button className="btn btn-circle btn-sm btn-ghost" onClick={() => scrollRecsCarousel(1)}>❯</button>
+                            </div>
+                        </div>
+
+                        <div ref={recsCarouselRef} className="carousel carousel-center w-full p-4 space-x-4 bg-transparent rounded-box" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
+                            {recsLoading
+                                ? Array.from({ length: 6 }).map((_, i) => (
+                                    <div key={i} className="carousel-item">
+                                        <div className="card w-56 bg-base-100 shadow-xl animate-pulse">
+                                            <div className="h-40 bg-base-300 rounded-t-2xl"></div>
+                                            <div className="card-body p-3 gap-2">
+                                                <div className="h-3 bg-base-300 rounded w-3/4"></div>
+                                                <div className="h-3 bg-base-300 rounded w-1/2"></div>
+                                                <div className="h-7 bg-base-300 rounded mt-1"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                                : personalRecs.map(rec => (
+                                    <div key={rec.id} className="carousel-item">
+                                        <div className="card w-56 bg-base-100 shadow-xl group overflow-hidden relative">
+                                            {rec.category && (
+                                                <div className="absolute top-2 left-2 z-10 badge badge-secondary badge-sm font-semibold text-white">
+                                                    {rec.category.category_name}
+                                                </div>
+                                            )}
+                                            <Link to={`/product/${rec.id}`}>
+                                                <figure className="h-40 overflow-hidden">
+                                                    <img
+                                                        src={rec.image ? (rec.image.startsWith('http') ? rec.image : `http://127.0.0.1:8000${rec.image}`) : ''}
+                                                        alt={rec.name}
+                                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                                    />
+                                                </figure>
+                                            </Link>
+                                            <div className="absolute bottom-4 left-4 right-4 bg-base-100/95 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-base-content/5">
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex justify-between items-start">
+                                                        <h3 className="font-bold text-sm text-base-content line-clamp-1 flex-1 mr-2">
+                                                            <Link to={`/product/${rec.id}`} className="hover:text-secondary transition-colors">
+                                                                {rec.name}
+                                                            </Link>
+                                                        </h3>
+                                                        <span className="text-secondary font-bold text-sm whitespace-nowrap">₹{rec.price}/kg</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex items-center bg-base-200 rounded-lg px-2 py-0.5">
+                                                            <input
+                                                                type="number"
+                                                                value={recQtys[rec.id] ?? 1.0}
+                                                                min="0.1"
+                                                                max={rec.quantity}
+                                                                step="0.1"
+                                                                onChange={e => setRecQtys(prev => ({ ...prev, [rec.id]: parseFloat(e.target.value) }))}
+                                                                className="bg-transparent border-none outline-none text-xs w-12 font-semibold text-center"
+                                                            />
+                                                            <span className="text-[10px] opacity-60 font-bold uppercase">kg</span>
+                                                        </div>
+                                                        <button
+                                                            className="btn btn-secondary btn-xs flex-1 text-[10px] gap-1 px-1 h-7 min-h-7"
+                                                            onClick={() => addToCart({ ...rec, weight: rec.quantity, quantity: recQtys[rec.id] ?? 1.0 })}
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                                            ADD
+                                                        </button>
+                                                    </div>
+                                                    {rec.quantity > 0 && (
+                                                        <div className="text-[9px] opacity-40 text-center font-medium">Available: {rec.quantity} kg</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    </section>
+                )
+            ) : (
+                <section className="mb-12">
+                    <div className="card bg-base-100 shadow-sm border border-dashed border-base-content/20 p-6 flex flex-col sm:flex-row items-center gap-4 rounded-2xl">
+                        <div className="text-4xl">✨</div>
+                        <div className="flex-1">
+                            <h3 className="font-bold text-base-content">Personalised picks, just for you</h3>
+                            <p className="text-sm text-base-content/60 mt-1">Log in to see recommendations based on your cart &amp; purchase history.</p>
+                        </div>
+                        <Link to="/login" className="btn btn-secondary btn-sm">Log In</Link>
+                    </div>
+                </section>
+            )}
 
             {/* Shop By Categories Section */}
             <section>

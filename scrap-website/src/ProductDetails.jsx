@@ -1,15 +1,28 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCart } from "./CartContext";
 import { useProducts } from "./ProductContext";
-import user from "./assets/user.svg"; // Assuming user icon exists, or use a placeholder
+import api from "./api";
+import user from "./assets/user.svg";
 
 export default function ProductDetails() {
     const { id } = useParams();
     const { addToCart } = useCart();
     const { products, loading } = useProducts();
     const [quantity, setQuantity] = useState(1.0);
+    const [recommendations, setRecommendations] = useState([]);
+    const [recsLoading, setRecsLoading] = useState(false);
+    const [recQtys, setRecQtys] = useState({});
+
+    // Fetch recommendations whenever the viewed product changes
+    useEffect(() => {
+        if (!id) return;
+        setRecsLoading(true);
+        api.get(`recommendations/?product_id=${id}`)
+            .then(res => setRecommendations(res.data))
+            .catch(() => setRecommendations([]))
+            .finally(() => setRecsLoading(false));
+    }, [id]);
 
     // Convert id to number for comparison
     const product = products.find(p => p.id === parseInt(id));
@@ -39,7 +52,7 @@ export default function ProductDetails() {
     const maxSliderValue = Math.max(availableStock + 1, 10);
 
     return (
-        <div className="min-h-screen bg-base-200 p-4 md:p-10 flex justify-center">
+        <div className="min-h-screen bg-base-200 p-4 md:p-10 flex flex-col items-center">
             <div className="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
 
                 {/* Product Image */}
@@ -162,6 +175,80 @@ export default function ProductDetails() {
                     )}
                 </div>
             </div>
+
+            {/* You Might Also Like */}
+            {(recsLoading || recommendations.length > 0) && (
+                <section className="max-w-5xl w-full mt-10 mx-auto">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-1 h-7 rounded-full bg-primary"></div>
+                        <h2 className="text-xl font-bold text-base-content">You Might Also Like</h2>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {recsLoading
+                            ? Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="card bg-base-100 shadow-xl animate-pulse">
+                                    <div className="h-44 bg-base-300 rounded-t-2xl"></div>
+                                    <div className="card-body p-3 gap-2">
+                                        <div className="h-3 bg-base-300 rounded w-3/4"></div>
+                                        <div className="h-3 bg-base-300 rounded w-1/2"></div>
+                                        <div className="h-7 bg-base-300 rounded mt-1"></div>
+                                    </div>
+                                </div>
+                            ))
+                            : recommendations.map(rec => (
+                                <div key={rec.id} className="card bg-base-100 shadow-xl group overflow-hidden relative">
+                                    {/* Score badge — category tag */}
+                                    {rec.category && (
+                                        <div className="absolute top-2 left-2 z-10 badge badge-primary badge-sm font-semibold">
+                                            {rec.category.category_name}
+                                        </div>
+                                    )}
+                                    <Link to={`/product/${rec.id}`}>
+                                        <figure className="h-44 overflow-hidden">
+                                            <img
+                                                src={rec.image ? (rec.image.startsWith('http') ? rec.image : `http://127.0.0.1:8000${rec.image}`) : ''}
+                                                alt={rec.name}
+                                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                            />
+                                        </figure>
+                                    </Link>
+                                    <div className="card-body p-3 gap-1">
+                                        <Link to={`/product/${rec.id}`} className="font-bold text-sm line-clamp-1 hover:text-primary transition-colors">
+                                            {rec.name}
+                                        </Link>
+                                        <span className="text-primary font-bold text-xs">₹{rec.price}/kg</span>
+                                        <div className="flex items-center gap-1 mt-1">
+                                            <div className="flex items-center bg-base-200 rounded-lg px-2 py-0.5">
+                                                <input
+                                                    type="number"
+                                                    value={recQtys[rec.id] ?? 1.0}
+                                                    min="0.1"
+                                                    max={rec.quantity}
+                                                    step="0.1"
+                                                    onChange={e => setRecQtys(prev => ({ ...prev, [rec.id]: parseFloat(e.target.value) }))}
+                                                    className="bg-transparent border-none outline-none text-xs w-12 font-semibold text-center"
+                                                />
+                                                <span className="text-[10px] opacity-60 font-bold uppercase">kg</span>
+                                            </div>
+                                            <button
+                                                className="btn btn-primary btn-xs flex-1 text-[10px] gap-1 px-1 h-7 min-h-7"
+                                                onClick={() => addToCart({ ...rec, weight: rec.quantity, quantity: recQtys[rec.id] ?? 1.0 })}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                                ADD
+                                            </button>
+                                        </div>
+                                        {rec.quantity > 0 && (
+                                            <div className="text-[9px] opacity-40 text-center font-medium">Available: {rec.quantity} kg</div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        }
+                    </div>
+                </section>
+            )}
         </div>
     );
 }

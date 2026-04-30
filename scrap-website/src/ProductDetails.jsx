@@ -207,7 +207,7 @@ export default function ProductDetails() {
                                     <Link to={`/product/${rec.id}`}>
                                         <figure className="h-44 overflow-hidden">
                                             <img
-                                                src={rec.image ? (rec.image.startsWith('http') ? rec.image : `http://127.0.0.1:8000${rec.image}`) : ''}
+                                                src={rec.image ? (rec.image.startsWith('http') ? rec.image : `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${rec.image}`) : ''}
                                                 alt={rec.name}
                                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                             />

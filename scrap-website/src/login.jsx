@@ -13,16 +13,12 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://127.0.0.1:8000/auth/token/login/', {
+            const response = await axios.post(`${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}/auth/token/login/`, {
                 email,
                 password
-            }); // Using axios directly or api instance, but api instance has base url /api/ so might need adjustment if auth is at /auth/
-            // Actually, my api instance has /api/ base, but auth is at /auth/.
-            // Let's use direct axios for auth or create a separate instance, or just use full URL.
-            // Wait, djoser is at /auth/, not /api/auth/. Check urls.py.
-            // Yes: path('auth/', include('djoser.urls')).
-            // So URL is http://127.0.0.1:8000/auth/...
-            // The api instance is http://127.0.0.1:8000/api/
+            }); 
+            // So URL is ${import.meta.env.VITE_BASE_URL}/auth/...
+            // The api instance is ${import.meta.env.VITE_API_URL} (with /api/)
 
             // I'll import axios directly for this file or just use the full URL.
             // Let's just standard axios for now to avoid confusion.

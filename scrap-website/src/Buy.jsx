@@ -51,7 +51,7 @@ function Buy() {
                     
                     const localImage = categoryImages[cat.category_name];
                     const defaultImageUrl = localImage 
-                        ? `http://127.0.0.1:8000${localImage}` 
+                        ? `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${localImage}` 
                         : `https://loremflickr.com/300/300/${searchKeywords},scrap,texture/all`;
                     
                     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><rect width="100%" height="100%" fill="#374151"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="30" fill="#9ca3af" font-weight="bold">${safeName}</text></svg>`;
@@ -60,7 +60,7 @@ function Buy() {
                     return {
                         ...cat,
                          image: cat.image 
-                            ? (cat.image.startsWith('http') ? cat.image : `http://127.0.0.1:8000${cat.image}`)
+                            ? (cat.image.startsWith('http') ? cat.image : `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${cat.image}`)
                             : defaultImageUrl,
                          fallback: fallbackUrl
                     };
@@ -215,7 +215,7 @@ function Buy() {
                                             <Link to={`/product/${rec.id}`}>
                                                 <figure className="h-40 overflow-hidden">
                                                     <img
-                                                        src={rec.image ? (rec.image.startsWith('http') ? rec.image : `http://127.0.0.1:8000${rec.image}`) : ''}
+                                                        src={rec.image ? (rec.image.startsWith('http') ? rec.image : `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${rec.image}`) : ''}
                                                         alt={rec.name}
                                                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                                                     />

@@ -84,7 +84,7 @@ function CategoryPage() {
                             <figure className="px-4 pt-4 h-48 relative overflow-hidden">
                                 {product.image ? (
                                     <img 
-                                        src={product.image.startsWith('http') ? product.image : `http://127.0.0.1:8000${product.image}`} 
+                                        src={product.image.startsWith('http') ? product.image : `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${product.image}`} 
                                         alt={product.name} 
                                         className="rounded-xl object-cover h-full w-full group-hover:scale-110 transition-transform duration-300"
                                     />

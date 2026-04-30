@@ -31,7 +31,7 @@ export const CartProvider = ({ children }) => {
                     price: item.product.price,
                     quantity: item.quantity,
                     image: item.product.image 
-                        ? (item.product.image.startsWith('http') ? item.product.image : `http://127.0.0.1:8000${item.product.image}`) 
+                        ? (item.product.image.startsWith('http') ? item.product.image : `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${item.product.image}`) 
                         : null,
                     stock: item.product.quantity // Available stock
                 }));

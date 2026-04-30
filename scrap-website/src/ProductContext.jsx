@@ -25,7 +25,7 @@ export const ProductProvider = ({ children }) => {
                 category: p.category ? p.category.category_name : 'General',
                 location: p.city || p.address || 'Unknown Location',
                 image: p.image 
-                    ? (p.image.startsWith('http') ? p.image : `http://127.0.0.1:8000${p.image}`) 
+                    ? (p.image.startsWith('http') ? p.image : `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${p.image}`) 
                     : 'https://placehold.co/300x400?text=No+Image',
                 description: p.description,
                 seller: p.seller

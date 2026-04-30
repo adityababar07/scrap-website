@@ -43,7 +43,7 @@ export default function Profile() {
                 setCustomerId(profile.id);
             } else {
                 // get auth/users/me/ directly using absolute path since it's mounted at root not /api/
-                const me = await api.get('http://127.0.0.1:8000/auth/users/me/');
+                const me = await api.get(`${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}/auth/users/me/`);
                 const userData = {
                     name: me.data.username,
                     email: me.data.email,
@@ -83,7 +83,7 @@ export default function Profile() {
         e.preventDefault();
         try {
             // Update User profile (username, email) via Djoser
-            await api.patch('http://127.0.0.1:8000/auth/users/me/', {
+            await api.patch(`${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}/auth/users/me/`, {
                 username: formData.name,
                 email: formData.email
             });

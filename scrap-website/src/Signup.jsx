@@ -12,7 +12,7 @@ const Signup = () => {
         e.preventDefault();
         try {
             // Register user
-            await axios.post('http://127.0.0.1:8000/auth/users/', {
+            await axios.post(`${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}/auth/users/`, {
                 username: name, // Djoser uses username by default, mapping name to username
                 email,
                 password

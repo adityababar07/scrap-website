@@ -132,35 +132,46 @@ function Buy() {
                                             <span className="text-primary font-bold text-sm whitespace-nowrap">₹{product.price}/kg</span>
                                         </div>
                                         
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex items-center bg-base-200 rounded-lg px-2 py-0.5">
-                                                <input 
-                                                    type="number" 
-                                                    defaultValue="1.0" 
-                                                    min="0.1" 
-                                                    max={product.weight} 
-                                                    step="0.1"
-                                                    className="bg-transparent border-none outline-none text-xs w-12 font-semibold text-center"
-                                                    id={`qty-${product.id}`}
-                                                />
-                                                <span className="text-[10px] opacity-60 font-bold uppercase">kg</span>
-                                            </div>
-                                            
-                                            <button 
-                                                className="btn btn-primary btn-xs flex-1 text-[10px] gap-1 px-1 h-7 min-h-7"
-                                                onClick={() => {
-                                                    const qty = parseFloat(document.getElementById(`qty-${product.id}`).value);
-                                                    addToCart({ ...product, quantity: qty });
-                                                }}
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
-                                                ADD
-                                            </button>
-                                        </div>
-                                        {product.weight > 0 && (
-                                            <div className="text-[9px] opacity-40 text-center font-medium">
-                                                Available: {product.weight} kg
-                                            </div>
+                                        {product.available !== false && product.weight > 0 ? (
+                                            <>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center bg-base-200 rounded-lg px-2 py-0.5">
+                                                        <input 
+                                                            type="number" 
+                                                            defaultValue={Math.min(1.0, product.weight)} 
+                                                            min="0.1" 
+                                                            max={product.weight} 
+                                                            step="0.1"
+                                                            className="bg-transparent border-none outline-none text-xs w-12 font-semibold text-center"
+                                                            id={`qty-${product.id}`}
+                                                        />
+                                                        <span className="text-[10px] opacity-60 font-bold uppercase">kg</span>
+                                                    </div>
+                                                    
+                                                    <button 
+                                                        className="btn btn-primary btn-xs flex-1 text-[10px] gap-1 px-1 h-7 min-h-7"
+                                                        onClick={() => {
+                                                            const qty = parseFloat(document.getElementById(`qty-${product.id}`).value);
+                                                            addToCart({ ...product, quantity: qty });
+                                                        }}
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                                        ADD
+                                                    </button>
+                                                </div>
+                                                <div className="text-[9px] opacity-40 text-center font-medium">
+                                                    Available: {product.weight} kg
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button className="btn btn-error btn-outline btn-xs w-full h-7 min-h-7 opacity-75 cursor-not-allowed" disabled>
+                                                    OUT OF STOCK
+                                                </button>
+                                                <div className="text-[9px] text-error font-bold text-center uppercase tracking-wider">
+                                                    Out of Stock
+                                                </div>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -235,7 +246,7 @@ function Buy() {
                                                         <div className="flex items-center bg-base-200 rounded-lg px-2 py-0.5">
                                                             <input
                                                                 type="number"
-                                                                value={recQtys[rec.id] ?? 1.0}
+                                                                value={recQtys[rec.id] ?? Math.min(1.0, rec.quantity)}
                                                                 min="0.1"
                                                                 max={rec.quantity}
                                                                 step="0.1"
@@ -246,7 +257,7 @@ function Buy() {
                                                         </div>
                                                         <button
                                                             className="btn btn-secondary btn-xs flex-1 text-[10px] gap-1 px-1 h-7 min-h-7"
-                                                            onClick={() => addToCart({ ...rec, weight: rec.quantity, quantity: recQtys[rec.id] ?? 1.0 })}
+                                                            onClick={() => addToCart({ ...rec, weight: rec.quantity, quantity: recQtys[rec.id] ?? Math.min(1.0, rec.quantity) })}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
                                                             ADD

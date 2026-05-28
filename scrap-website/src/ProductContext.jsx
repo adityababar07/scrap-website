@@ -28,7 +28,8 @@ export const ProductProvider = ({ children }) => {
                     ? (p.image.startsWith('http') ? p.image : `${import.meta.env.VITE_BASE_URL || 'http://127.0.0.1:8000'}${p.image}`) 
                     : 'https://placehold.co/300x400?text=No+Image',
                 description: p.description,
-                seller: p.seller
+                seller: p.seller,
+                available: p.available
             });
 
             const mappedProducts = response.data.map(mapProduct);

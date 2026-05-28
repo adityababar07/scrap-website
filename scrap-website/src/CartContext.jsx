@@ -56,9 +56,13 @@ export const CartProvider = ({ children }) => {
             return;
         }
         try {
+            // product.quantity is the user-selected qty passed explicitly from the ADD button
+            // product.weight is the available stock — we must never send that as the quantity
+            const qty = parseFloat(product.quantity);
+            const safeQty = (!isNaN(qty) && qty > 0) ? qty : 1.0;
             await api.post('orders/add-to-cart/', {
                 product_id: product.id,
-                quantity: parseFloat(product.quantity || 1.0)
+                quantity: safeQty
             });
             alert("Added to cart!");
             fetchCart(); // Refresh cart

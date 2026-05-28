@@ -27,6 +27,12 @@ export default function ProductDetails() {
     // Convert id to number for comparison
     const product = products.find(p => p.id === parseInt(id));
 
+    useEffect(() => {
+        if (product && product.weight !== undefined) {
+            setQuantity(Math.min(1.0, product.weight));
+        }
+    }, [product]);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-base-200 flex items-center justify-center">
@@ -44,12 +50,13 @@ export default function ProductDetails() {
         );
     }
 
+    const isProductAvailable = product.available !== false && product.weight > 0;
     const availableStock = product.weight;
     const isOutOfStock = parseFloat(quantity) > availableStock;
     const totalPrice = (product.price * parseFloat(quantity)).toFixed(2);
 
-    // Max slider value - allow going a bit over to demonstrate validation
-    const maxSliderValue = Math.max(availableStock + 1, 10);
+    // Max slider value - scale strictly according to actual available stock
+    const maxSliderValue = availableStock;
 
     return (
         <div className="min-h-screen bg-base-200 p-4 md:p-10 flex flex-col items-center">
@@ -76,37 +83,43 @@ export default function ProductDetails() {
                             {/* Weight */}
                             <div className="flex items-center gap-2 text-base-content/70 mt-1">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>
-                                <span className="font-medium">Total Stock: {product.weight} {product.unit}</span>
+                                <span className="font-medium">Total Stock: {isProductAvailable ? product.weight : 0} {product.unit}</span>
                             </div>
 
                             {/* Quantity Selector */}
                             <div className="form-control mt-4">
                                 <label className="label">
                                     <span className="label-text font-medium">Select Quantity ({product.unit})</span>
-                                    <span className="label-text-alt">Available: {availableStock} {product.unit}</span>
+                                    <span className="label-text-alt">Available: {isProductAvailable ? availableStock : 0} {product.unit}</span>
                                 </label>
                                 <input
                                     type="range"
                                     min="0.1"
                                     max={maxSliderValue}
                                     step="0.1"
-                                    value={quantity}
+                                    value={isProductAvailable ? quantity : 0}
+                                    disabled={!isProductAvailable}
                                     onChange={(e) => setQuantity(parseFloat(e.target.value))}
-                                    className={`range ${isOutOfStock ? 'range-error' : 'range-primary'}`}
+                                    className={`range ${!isProductAvailable || isOutOfStock ? 'range-error' : 'range-primary'}`}
                                 />
                                 <div className="w-full flex justify-between text-xs px-2 mt-2">
                                     <span>0.1 {product.unit}</span>
                                     <span>{maxSliderValue} {product.unit}</span>
                                 </div>
                                 <div className="text-center font-bold text-lg mt-2">
-                                    Selected: {quantity} {product.unit}
+                                    Selected: {isProductAvailable ? quantity : 0} {product.unit}
                                 </div>
-                                {isOutOfStock && (
+                                {!isProductAvailable ? (
+                                    <div role="alert" className="alert alert-error mt-2 py-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                        <span>Out of Stock! This product is no longer available.</span>
+                                    </div>
+                                ) : isOutOfStock ? (
                                     <div role="alert" className="alert alert-error mt-2 py-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <span>Out of stock! Only {availableStock} {product.unit} available.</span>
                                     </div>
-                                )}
+                                ) : null}
                             </div>
 
                             <h2 className="card-title text-3xl font-bold mt-2">{product.name}</h2>
@@ -120,7 +133,7 @@ export default function ProductDetails() {
 
                             {/* Price Breakdown */}
                             <div className="flex flex-col gap-1 mt-6">
-                                <span className="text-xl font-bold">Total Price: ₹{totalPrice}</span>
+                                <span className="text-xl font-bold">Total Price: ₹{isProductAvailable ? totalPrice : "0.00"}</span>
                                 <span className="text-sm opacity-70">Rate: ₹{product.price}/{product.unit}</span>
                             </div>
 
@@ -135,10 +148,10 @@ export default function ProductDetails() {
                                 <button
                                     className="btn btn-primary flex-1 text-white"
                                     onClick={() => addToCart({ ...product, quantity: quantity })}
-                                    disabled={isOutOfStock}
+                                    disabled={!isProductAvailable || isOutOfStock}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                    Add to Cart
+                                    {isProductAvailable ? "Add to Cart" : "Out of Stock"}
                                 </button>
                             </div>
                         </div>

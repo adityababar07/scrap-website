@@ -104,7 +104,11 @@ function CategoryPage() {
                                 <div className="flex flex-col gap-2 mt-2">
                                     <div className="flex justify-between items-center text-xs opacity-70">
                                         <span>Condition: {product.condition || 'Used'}</span>
-                                        <span>Available: {product.quantity} kg</span>
+                                        {product.available !== false && product.quantity > 0 ? (
+                                            <span>Available: {product.quantity} kg</span>
+                                        ) : (
+                                            <span className="text-error font-bold uppercase">Out of Stock</span>
+                                        )}
                                     </div>
                                     
                                     <div className="flex items-center gap-3 mt-2">
@@ -113,29 +117,37 @@ function CategoryPage() {
                                             <span className="text-[10px] opacity-50 uppercase font-bold">per kg</span>
                                         </div>
                                         
-                                        <div className="flex items-center bg-base-200 rounded-lg px-2 py-1 ml-auto">
-                                            <input 
-                                                type="number" 
-                                                defaultValue="1.0" 
-                                                min="0.1" 
-                                                max={product.quantity} 
-                                                step="0.1"
-                                                className="bg-transparent border-none outline-none text-sm w-12 font-bold text-center"
-                                                id={`cat-qty-${product.id}`}
-                                            />
-                                            <span className="text-xs opacity-60 font-bold">kg</span>
-                                        </div>
-                                        
-                                        <button 
-                                            className="btn btn-primary btn-sm btn-circle"
-                                            onClick={() => {
-                                                const qty = parseFloat(document.getElementById(`cat-qty-${product.id}`).value);
-                                                addToCart({ ...product, quantity: qty });
-                                            }}
-                                            aria-label="Add to cart"
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
-                                        </button>
+                                        {product.available !== false && product.quantity > 0 ? (
+                                            <>
+                                                <div className="flex items-center bg-base-200 rounded-lg px-2 py-1 ml-auto">
+                                                    <input 
+                                                        type="number" 
+                                                        defaultValue={Math.min(1.0, product.quantity)} 
+                                                        min="0.1" 
+                                                        max={product.quantity} 
+                                                        step="0.1"
+                                                        className="bg-transparent border-none outline-none text-sm w-12 font-bold text-center"
+                                                        id={`cat-qty-${product.id}`}
+                                                    />
+                                                    <span className="text-xs opacity-60 font-bold">kg</span>
+                                                </div>
+                                                
+                                                <button 
+                                                    className="btn btn-primary btn-sm btn-circle"
+                                                    onClick={() => {
+                                                        const qty = parseFloat(document.getElementById(`cat-qty-${product.id}`).value);
+                                                        addToCart({ ...product, quantity: qty });
+                                                    }}
+                                                    aria-label="Add to cart"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" /></svg>
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button className="btn btn-error btn-outline btn-xs ml-auto opacity-75 cursor-not-allowed" disabled>
+                                                SOLD OUT
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
